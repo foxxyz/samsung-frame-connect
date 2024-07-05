@@ -7,9 +7,9 @@ const THRESHOLDS = {
 }
 
 // Helper function to consider verbosity when logging
-export function createLogger({ verbosity }) {
+export function createLogger({ verbosity, name }) {
     const log = function(delegate, threshold, ...msg) {
-        if (verbosity >= threshold) delegate(...msg)
+        if (verbosity >= threshold) delegate(`[${name}]`, ...msg)
     }
     const logger = {}
     for (const severity of ['debug', 'info', 'log', 'warn', 'error']) {

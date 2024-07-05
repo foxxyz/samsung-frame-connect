@@ -1,7 +1,7 @@
 Samsung Frame Connect
 =====================
 
-API for interfacing with Samsung "The Frame" TV's.
+Node.js package for interfacing with Samsung "The Frame" TV's.
 
 Features:
  * Upload custom art

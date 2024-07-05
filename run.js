@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { readFile } from 'node:fs/promises'
+import { extname } from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 
 import 'fresh-console'
@@ -19,18 +20,27 @@ parser.add_argument('--image-path', { help: 'Path to an image to upload' })
 const args = parser.parse_args()
 
 const client = new SamsungFrameClient(args)
+
+const { name, device } = await client.getDeviceInfo()
+console.info(`Found ${name} (${device.type} ${device.modelName}). Connecting...`)
 await client.connect()
-//console.info('Device info: ', await client.getDeviceInfo())
+console.success('Successfully connected!')
+
+console.info('Power is on: ', await client.isOn())
+//console.info(await client.togglePower())
 // console.info(`In art mode: ${await client.inArtMode()}`)
 // console.info(`Current brightness: ${await client.getBrightness()}`)
-//console.info(`API Version: ${await client.getAPIVersion()}`)
-//console.info(await client.getAvailableArt())
+// console.info(await client.setBrightness(7))
+// console.info(`API Version: ${await client.getAPIVersion()}`)
+// console.info(await client.getAvailableArt())
 // console.info(await client.getCurrentArt())
 // console.info(await client.setCurrentArt({ id: 'SAM-F0203' }))
 
-const imageBuffer = await readFile(args.image_path)
-console.log(imageBuffer)
-const newImageID = await client.upload(imageBuffer, { fileType: 'png' })
-
-await client.setCurrentArt({ id: newImageID })
-
+if (args.image_path) {
+    // Read the image
+    const imageBuffer = await readFile(args.image_path)
+    // Upload and return the content ID
+    const newImageID = await client.upload(imageBuffer, { fileType: extname(args.image_path).slice(1) })
+    // Set the TV to the new art
+    await client.setCurrentArt({ id: newImageID })
+}
