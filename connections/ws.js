@@ -1,5 +1,8 @@
 import { randomUUID } from 'node:crypto'
 import { EventEmitter } from 'node:events'
+import { readFile, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { setTimeout } from 'node:timers/promises'
 import { TLSSocket } from 'node:tls'
 import { createLogger } from '../util.js'
@@ -23,6 +26,7 @@ export class WSConnector extends EventEmitter {
         this.b64Name = btoa(this.name)
         this.log = createLogger({ name, verbosity })
         this.token = null
+        this.tokenFile = join(tmpdir(), `.samsung-frame-connect-${endpoint}-token`)
         this.url = `wss://${host}:8002/api/v2/channels/${endpoint}?name=${this.b64Name}`
         this.reconnectInterval = 3
     }
@@ -44,6 +48,7 @@ export class WSConnector extends EventEmitter {
         this._reconnectTimer = setTimeout(this.connect.bind(this), this.reconnectInterval * 1000)
     }
     async connect() {
+        this.token = await this.retrieveToken()
         const url = `${this.url}&token=${this.token ? this.token : 'None'}`
         this.socket = new WebSocket(url, { rejectUnauthorized: false })
         this.socket.onerror = this.error.bind(this)
@@ -53,7 +58,7 @@ export class WSConnector extends EventEmitter {
         const token = await new Promise(res => this.once('channelConnect', res))
         if (token) {
             this.close()
-            this.token = token
+            await this.storeToken(token)
             return this.connect()
         } else if (!this.token) {
             // Wait for ready event
@@ -80,6 +85,7 @@ export class WSConnector extends EventEmitter {
         return this.request({ action: 'get_current_artwork' })
     }
     error(e) {
+        console.log(e)
         this.log.warn(`Socket connection to ${this.url} refused: ${e.toString()}`)
     }
     async inArtMode() {
@@ -126,6 +132,14 @@ export class WSConnector extends EventEmitter {
         this.socket.send(JSON.stringify(message))
         return new Promise(res => this.once(`response/${id}`, res))
     }
+    async retrieveToken() {
+        if (this.token) return this.token
+        try {
+            return await readFile(this.tokenFile, { encoding: 'utf8' })
+        } catch (e) {
+            this.log.debug(`Token file not found or unreadable (${e.toString()}). Waiting for new`)
+        }
+    }
     setBrightness(value) {
         return this.request({
             action: 'set_brightness',
@@ -140,6 +154,10 @@ export class WSConnector extends EventEmitter {
             content_id: id,
             category,
         })
+    }
+    storeToken(token) {
+        this.token = token
+        return writeFile(this.tokenFile, this.token)
     }
     async togglePower() {
         const message = {
@@ -166,7 +184,7 @@ export class WSConnector extends EventEmitter {
         this.log.debug('Sent: ', message2)
         this.socket.send(JSON.stringify(message2))
     }
-    async upload(buff, { fileType = 'png', matte = 'modernthin_black' }) {
+    async upload(buff, { fileType = 'png', matte = 'none' }) {
         const date = new Date().toISOString().slice(0, 19).replace('T', ' ').replaceAll('-', ':')
         const id = randomUUID()
         // Request an open port to send the image via

@@ -27,7 +27,7 @@ await client.connect()
 console.success('Successfully connected!')
 
 console.info('Power is on: ', await client.isOn())
-//console.info(await client.togglePower())
+console.info(await client.togglePower())
 // console.info(`In art mode: ${await client.inArtMode()}`)
 // console.info(`Current brightness: ${await client.getBrightness()}`)
 // console.info(await client.setBrightness(7))
