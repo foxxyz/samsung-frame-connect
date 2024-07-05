@@ -17,7 +17,7 @@ _Note: This is an unofficial library and not supported or endorsed by Samsung_
 Requirements
 ------------
 
- * Node 18+
+ * Node 20+
 
 Installation
 ------------
@@ -37,7 +37,7 @@ npm install samsung-frame-connect
 License
 -------
 
-MIT
+LGPL v3
 
 Thanks
 ------
