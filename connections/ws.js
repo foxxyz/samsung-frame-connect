@@ -55,6 +55,7 @@ export class WSConnector extends EventEmitter {
         this.socket.onmessage = this.receive.bind(this)
         this.socket.onopen = this.opened.bind(this)
         this.socket.onclose = this.closed.bind(this)
+        const readyPromise = new Promise(res => this.once('ready', res))
         const token = await new Promise(res => this.once('channelConnect', res))
         if (token) {
             this.close()
@@ -62,7 +63,7 @@ export class WSConnector extends EventEmitter {
             return this.connect()
         } else if (!this.token) {
             // Wait for ready event
-            return new Promise(res => this.once('ready', res))
+            return readyPromise
         }
     }
     async getAPIVersion() {
@@ -85,7 +86,6 @@ export class WSConnector extends EventEmitter {
         return this.request({ action: 'get_current_artwork' })
     }
     error(e) {
-        console.log(e)
         this.log.warn(`Socket connection to ${this.url} refused: ${e.toString()}`)
     }
     async inArtMode() {
