@@ -13,7 +13,7 @@ import { SamsungFrameClient } from './client.js'
 // eslint-disable-next-line
 const parser = new ArgumentParser({ add_help: true, description: packageInfo.description, formatter_class: ArgumentDefaultsHelpFormatter })
 parser.add_argument('-v', { action: 'version', version: packageInfo.version })
-parser.add_argument('--host', { help: 'Websocket Host', required: true })
+parser.add_argument('--host', { help: 'TV Host or IP', required: true })
 parser.add_argument('--port', { help: 'Websocket Port', default: 8002 })
 parser.add_argument('--verbose', { help: 'Show log/debug messages', action: 'store_true' })
 parser.add_argument('--image-path', { help: 'Path to an image to upload' })
