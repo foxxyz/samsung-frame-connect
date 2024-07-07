@@ -10,6 +10,12 @@ export class SamsungFrameClient extends EventEmitter {
             rest: new RESTConnector({ host, verbosity })
         }
     }
+    close() {
+        return Promise.all([
+            this.connections.art.close(),
+            this.connections.remote.close(),
+        ])
+    }
     connect() {
         return Promise.all([
             this.connections.art.connect(),

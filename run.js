@@ -20,7 +20,6 @@ parser.add_argument('--image-path', { help: 'Path to an image to upload' })
 const args = parser.parse_args()
 
 const client = new SamsungFrameClient(args)
-
 const { name, device } = await client.getDeviceInfo()
 console.info(`Found ${name} (${device.type} ${device.modelName}). Connecting...`)
 await client.connect()
