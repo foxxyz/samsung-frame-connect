@@ -19,7 +19,7 @@ const MAX_BRIGHTNESS = 10
 // - set_brightness: Brightness was changed
 // - wakeup
 export class WSConnector extends EventEmitter {
-    constructor({ host, endpoint, name, verbosity = 2 }) {
+    constructor({ host, port = 8002, endpoint, name, verbosity = 2 }) {
         super()
         this.connected = false
         this.name = name
@@ -27,7 +27,7 @@ export class WSConnector extends EventEmitter {
         this.log = createLogger({ name, verbosity })
         this.token = null
         this.tokenFile = join(tmpdir(), `.samsung-frame-connect-${endpoint}-token`)
-        this.url = `wss://${host}:8002/api/v2/channels/${endpoint}?name=${this.b64Name}`
+        this.url = `wss://${host}:${port}/api/v2/channels/${endpoint}?name=${this.b64Name}`
         this.reconnectInterval = 3
     }
     close() {
@@ -85,6 +85,14 @@ export class WSConnector extends EventEmitter {
     getCurrentArt() {
         return this.request({ action: 'get_current_artwork' })
     }
+    async getMatteColors() {
+        const { matte_color_list: colors } = await this.request({ action: 'get_matte_list' })
+        return JSON.parse(colors).map(c => c.color)
+    }
+    async getMatteTypes() {
+        const { matte_type_list: types } = await this.request({ action: 'get_matte_list' })
+        return JSON.parse(types).map(t => t.matte_type)
+    }
     error(e) {
         this.log.warn(`Socket connection to ${this.url} refused: ${e.toString()}`)
     }
@@ -130,7 +138,11 @@ export class WSConnector extends EventEmitter {
         }
         this.log.debug('Sent: ', message)
         this.socket.send(JSON.stringify(message))
-        return new Promise(res => this.once(`response/${id}`, res))
+        const signal = AbortSignal.timeout(4000)
+        return new Promise((res, rej) => {
+            this.once(`response/${id}`, res)
+            signal.addEventListener('abort', rej, { once: true })
+        })
     }
     async retrieveToken() {
         if (this.token) return this.token
@@ -154,6 +166,16 @@ export class WSConnector extends EventEmitter {
             content_id: id,
             category,
         })
+    }
+    async setMatte({ id, type, color }) {
+        await this.request({
+            action: 'change_matte',
+            // eslint-disable-next-line
+            content_id: id,
+            // eslint-disable-next-line
+            matte_id: `${type}_${color}`,
+        })
+        return this.setCurrentArt({ id })
     }
     storeToken(token) {
         this.token = token
