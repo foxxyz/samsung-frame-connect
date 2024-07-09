@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node index.js",
     "lint": "eslint",
-    "test": "node --test  --experimental-test-coverage test/*.test.js"
+    "test": "node --test  --experimental-test-coverage"
   },
   "main": "index.js",
   "type": "module",

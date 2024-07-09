@@ -8,12 +8,8 @@ export class RESTConnector extends EventEmitter {
         this.log = createLogger({ name, verbosity })
         this.url = `http://${host}:8001/api/v2/`
     }
-    async getDeviceInfo() {
-        const res = await fetch(this.url)
+    async get(path = '') {
+        const res = await fetch(`${this.url}${path}`)
         return res.json()
-    }
-    async isOn() {
-        const { device: { PowerState: powerState } } = await this.getDeviceInfo()
-        return powerState === 'on'
     }
 }
