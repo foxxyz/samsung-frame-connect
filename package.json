@@ -1,6 +1,6 @@
 {
   "name": "samsung-frame-connect",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "Samsung Frame Connect",
   "scripts": {
     "start": "node index.js",
