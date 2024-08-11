@@ -107,7 +107,7 @@ export class WSConnector extends EventEmitter {
         try {
             return await readFile(this.tokenFile, { encoding: 'utf8' })
         } catch (e) {
-            this.log.debug(`Token file not found or unreadable (${e.toString()}). Waiting for new`)
+            this.log.debug(`Token file not found or unreadable (${e.toString()}). Requesting a new token...`)
         }
     }
     storeToken(token) {

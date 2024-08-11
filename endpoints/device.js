@@ -1,7 +1,7 @@
-import { EventEmitter } from 'node:events'
 import { RESTConnector } from '../connections/index.js'
+import { BaseEndpoint } from './base.js'
 
-export class DeviceEndpoint extends EventEmitter {
+export class DeviceEndpoint extends BaseEndpoint {
     constructor(...args) {
         super()
         this.connection = new RESTConnector(...args)

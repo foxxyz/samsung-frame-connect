@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto'
-import { EventEmitter } from 'node:events'
 import { TLSSocket } from 'node:tls'
 
 import { WSConnector } from '../connections/ws.js'
+import { BaseEndpoint } from './base.js'
 
 const MAX_BRIGHTNESS = 10
 
@@ -14,7 +14,7 @@ const MAX_BRIGHTNESS = 10
 // - recently_set_updated: Recent items list has been updated
 // - set_brightness: Brightness was changed
 // - wakeup
-export class ArtModeEndpoint extends EventEmitter {
+export class ArtModeEndpoint extends BaseEndpoint {
     constructor(args) {
         super()
         this.connection = new WSConnector({
@@ -23,12 +23,6 @@ export class ArtModeEndpoint extends EventEmitter {
             name: `${args.name}Art`,
             endpoint: 'com.samsung.art-app',
         })
-    }
-    close() {
-        return this.connection.close()
-    }
-    connect() {
-        return this.connection.connect()
     }
     async getAPIVersion() {
         const { version } = await this.request({ action: 'api_version' })

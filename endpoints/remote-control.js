@@ -1,8 +1,7 @@
-import { EventEmitter } from 'node:events'
-
 import { WSConnector } from '../connections/ws.js'
+import { BaseEndpoint } from './base.js'
 
-export class RemoteControlEndpoint extends EventEmitter {
+export class RemoteControlEndpoint extends BaseEndpoint {
     constructor(args) {
         super()
         this.connection = new WSConnector({
@@ -11,12 +10,6 @@ export class RemoteControlEndpoint extends EventEmitter {
             name: `${args.name}Remote`,
             endpoint: 'samsung.remote.control',
         })
-    }
-    close() {
-        return this.connection.close()
-    }
-    connect() {
-        return this.connection.connect()
     }
     async togglePower() {
         const message = {
