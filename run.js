@@ -42,10 +42,12 @@ console.success('Successfully connected!')
 // Example to check API version
 // console.info(`API Version: ${await client.getAPIVersion()}`)
 
-// Example to check get/set displayed art
+// Examples to check get/set/delete displayed art
 // console.info(await client.getAvailableArt())
 // console.info(await client.getCurrentArt())
-// console.info(await client.setCurrentArt({ id: 'SAM-F0203' }))
+// await client.setCurrentArt({ id: 'SAM-F0203' })
+// await client.deleteArt('SAM-F0203')
+// await client.deleteArt(['SAM-F0203', 'SAM-F0304'])
 
 // Manually upload and set art
 if (args.image_path) {

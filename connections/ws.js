@@ -74,7 +74,7 @@ export class WSConnector extends EventEmitter {
         if (event === 'd2d_service_message') {
             const { request_id: requestID, event, ...response } = JSON.parse(data)
             if (requestID) {
-                return this.emit(`response/${requestID}`, response)
+                return this.emit(`response/${requestID}`, { event, response })
             }
             this.emit(event, response)
         }
@@ -98,7 +98,10 @@ export class WSConnector extends EventEmitter {
         this.socket.send(JSON.stringify(message))
         const signal = AbortSignal.timeout(4000)
         return new Promise((res, rej) => {
-            this.once(`response/${id}`, res)
+            this.once(`response/${id}`, ({ event, response }) => {
+                if (event === 'error') return rej(response)
+                res(response)
+            })
             signal.addEventListener('abort', rej, { once: true })
         })
     }

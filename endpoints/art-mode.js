@@ -48,6 +48,19 @@ export class ArtModeEndpoint extends BaseEndpoint {
             endpoint: 'com.samsung.art-app',
         })
     }
+    async deleteArt(ids) {
+        if (!Array.isArray(ids)) ids = [ids]
+        try {
+            const { content_id_list: contentList } = await this.request({
+                action: 'delete_image_list',
+                // eslint-disable-next-line camelcase
+                content_id_list: ids.map(id => ({ content_id: id }))
+            })
+            return JSON.parse(contentList).map(item => ({ id: item.content_id }))
+        } catch (e) {
+            throw new Error(`Item does not exist (${e})`)
+        }
+    }
     async getAPIVersion() {
         const { version } = await this.request({ action: 'api_version' })
         return version
