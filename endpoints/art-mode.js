@@ -6,6 +6,30 @@ import { BaseEndpoint } from './base.js'
 
 const MAX_BRIGHTNESS = 10
 
+function parseContentItem(data) {
+    return {
+        id: data.content_id,
+        date: data.image_date ? parseDate(data.image_date) : undefined,
+        categoryId: data.category_id,
+        slideshow: data.slideshow === 'true',
+        matte: parseMatte(data.matte_id),
+        portraitMatte: parseMatte(data.portrait_matte_id),
+        width: data.width,
+        height: data.height,
+    }
+}
+
+function parseDate(dateString) {
+    const [date, time] = dateString.split(' ')
+    return new Date(Date.parse(`${date.replaceAll(':', '-')} ${time}`))
+}
+
+function parseMatte(matteId) {
+    if (matteId === 'none') return null
+    const [type, color] = matteId.split('_')
+    return { type, color }
+}
+
 // Possible event names that can be emitted:
 // - art_mode_changed: Toggle art mode on/off
 // - get_artmode_settings: Returning current art mode settings
@@ -33,15 +57,16 @@ export class ArtModeEndpoint extends BaseEndpoint {
     }
     async getAvailableArt() {
         const { content_list: contentList } = await this.request({ action: 'get_content_list', category_id: 'MY-C0002' })
-        return JSON.parse(contentList)
+        return JSON.parse(contentList).map(parseContentItem)
     }
     async getBrightness() {
         const { data } = await this.request({ action: 'get_artmode_settings' })
         const setting = JSON.parse(data).find(({ item }) => item === 'brightness')
         return parseInt(setting.value)
     }
-    getCurrentArt() {
-        return this.request({ action: 'get_current_artwork' })
+    async getCurrentArt() {
+        const result = await this.request({ action: 'get_current_artwork' })
+        return parseContentItem(result)
     }
     async getMatteColors() {
         const { matte_color_list: colors } = await this.request({ action: 'get_matte_list' })

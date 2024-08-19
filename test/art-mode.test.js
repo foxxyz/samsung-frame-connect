@@ -89,6 +89,59 @@ describe('Art Mode Commands', () => {
         await endpoint.close()
         await mockTV.close()
     })
+    it('can return a list of available art pieces', async() => {
+        mockTV.nextResponse = {
+            event: 'get_content_list',
+            content_list: JSON.stringify([
+                {
+                    content_id: 'MY_F0016',
+                    category_id: 'MY-C0002',
+                    slideshow: 'false',
+                    matte_id: 'modern_warm',
+                    portrait_matte_id: 'modern_polar',
+                    width: 1920,
+                    height: 1080,
+                    image_date: '2024:07:11 04:08:44',
+                    content_type: 'mobile'
+                },
+                {
+                    content_id: 'MY_F0012',
+                    category_id: 'MY-C0002',
+                    slideshow: 'false',
+                    matte_id: 'squares_polar',
+                    portrait_matte_id: 'none',
+                    width: 1920,
+                    height: 1080,
+                    image_date: '2024:07:08 00:11:51',
+                    content_type: 'mobile'
+                }
+            ])
+        }
+        const pieces = await endpoint.getAvailableArt()
+        assert.deepEqual(pieces, [
+            {
+                id: 'MY_F0016',
+                date: new Date('2024-07-11 04:08:44'),
+                categoryId: 'MY-C0002',
+                slideshow: false,
+                matte: { type: 'modern', color: 'warm' },
+                portraitMatte: { type: 'modern', color: 'polar' },
+                width: 1920,
+                height: 1080,
+            },
+            {
+                id: 'MY_F0012',
+                date: new Date('2024-07-08 00:11:51'),
+                categoryId: 'MY-C0002',
+                slideshow: false,
+                matte: { type: 'squares', color: 'polar' },
+                portraitMatte: null,
+                width: 1920,
+                height: 1080,
+            }
+        ])
+        await endpoint.close()
+    })
     it('can return a list of matte types', async() => {
         mockTV.nextResponse = {
             event: 'get_matte_list',
@@ -107,8 +160,8 @@ describe('Art Mode Commands', () => {
             matte_color_list: '[\n  {\n    "color": "black",\n    "R": 34,\n    "G": 34,\n    "B": 33\n  },\n  {\n    "color": "turquoise",\n    "R": 46,\n    "G": 150,\n    "B": 141\n  }\n]'
         }
 
-        const types = await endpoint.getMatteColors()
-        assert.deepEqual(types, ['black', 'turquoise'])
+        const colors = await endpoint.getMatteColors()
+        assert.deepEqual(colors, ['black', 'turquoise'])
         await endpoint.close()
     })
 })
