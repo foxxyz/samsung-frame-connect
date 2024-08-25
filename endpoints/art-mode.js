@@ -174,7 +174,7 @@ export class ArtModeEndpoint extends BaseEndpoint {
         await new Promise(res => socket.end(res))
 
         // Wait for confirmation
-        const { content_id: contentID } = await new Promise(res => this.connection.once(`response/${id}`, res))
+        const { response: { content_id: contentID } } = await new Promise(res => this.connection.once(`response/${id}`, res))
         return contentID
     }
 }
