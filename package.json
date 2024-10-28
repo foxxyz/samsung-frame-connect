@@ -17,13 +17,13 @@
   "license": "LGPL-3.0-or-later",
   "devDependencies": {
     "@appliedminds/eslint-config": "^2.0.1",
-    "eslint": "^9.3.0",
-    "undici": "^6.19.2"
+    "eslint": "^9.13.0",
+    "undici": "^6.20.1"
   },
   "dependencies": {
     "argparse": "^2.0.1",
     "fresh-console": "^2.0.0",
     "promise-socket": "^8.0.0",
-    "ws": "^8.17.1"
+    "ws": "^8.18.0"
   }
 }
