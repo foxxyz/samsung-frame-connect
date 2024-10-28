@@ -1,14 +1,27 @@
 import { randomUUID } from 'node:crypto'
-import { EventEmitter } from 'node:events'
+import { EventEmitter, once } from 'node:events'
 import { readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { setTimeout } from 'node:timers/promises'
+//import { setTimeout } from 'node:timers/promises'
 import { createLogger } from '../util.js'
 import { WebSocket } from 'ws'
 
+async function eventReceived(target, eventName, { timeout } = {}) {
+    const options = {}
+    if (timeout) {
+        options.signal = AbortSignal.timeout(timeout * 1000)
+    }
+    try {
+        const [value] = await once(target, eventName, options)
+        return value
+    } catch (e) {
+        throw new Error(`Timed out! ${e}`)
+    }
+}
+
 export class WSConnector extends EventEmitter {
-    constructor({ host, port = 8002, endpoint, name, verbosity = 2 }) {
+    constructor({ host, port = 8002, endpoint, name, verbosity = 2, responseTimeout = 2 }) {
         super()
         this.connected = false
         this.name = name
@@ -18,6 +31,7 @@ export class WSConnector extends EventEmitter {
         this.tokenFile = join(tmpdir(), `.samsung-frame-connect-${endpoint}-token`)
         this.url = `wss://${host}:${port}/api/v2/channels/${endpoint}?name=${this.b64Name}`
         this.reconnectInterval = 3
+        this.responseTimeout = responseTimeout
     }
     close() {
         // Close with correct disconnection code
@@ -44,8 +58,8 @@ export class WSConnector extends EventEmitter {
         this.socket.onmessage = this.receive.bind(this)
         this.socket.onopen = this.opened.bind(this)
         this.socket.onclose = this.closed.bind(this)
-        const readyPromise = new Promise(res => this.once('ready', res))
-        const token = await new Promise(res => this.once('channelConnect', res))
+        const readyPromise = eventReceived(this, 'ready', { timeout: this.responseTimeout + 0.5 })
+        const token = await eventReceived(this, 'channelConnect', { timeout: this.responseTimeout })
         if (token) {
             this.close()
             await this.storeToken(token)

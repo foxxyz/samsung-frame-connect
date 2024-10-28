@@ -13,6 +13,7 @@ const TEST_CERT = {
     key: await readFile(join(__dirname, 'cert', 'key.pem')),
 }
 
+let response
 class MockTV {
     constructor() {
         this.server = createServer(TEST_CERT)
@@ -22,19 +23,7 @@ class MockTV {
     addClient(ws, req) {
         const path = req.url
         if (path !== '/api/v2/channels/testing?name=dW5kZWZpbmVk&token=None') return ws.close()
-        const connectionMessage = {
-            event: 'ms.channel.connect',
-            data: {
-                clients: [{
-                    id: '2837ec-1581-44f9-9cdf-c54229b444ad',
-                    attributes: {},
-                    connectTime: 1720153883972,
-                    deviceName: 'BBaaa3VuZ1R2QXJ7',
-                    isHost: false
-                }]
-            }
-        }
-        ws.send(JSON.stringify(connectionMessage))
+        ws.send(JSON.stringify(response))
         const readyMessage = {
             event: 'ms.channel.ready',
             data: {}
@@ -60,6 +49,18 @@ describe('Websocket Connections', () => {
         await mockTV.close()
     })
     it('can connect to an endpoint without a token', async() => {
+        response = {
+            event: 'ms.channel.connect',
+            data: {
+                clients: [{
+                    id: '2837ec-1581-44f9-9cdf-c54229b444ad',
+                    attributes: {},
+                    connectTime: 1720153883972,
+                    deviceName: 'BBaaa3VuZ1R2QXJ7',
+                    isHost: false
+                }]
+            }
+        }
         const connector = new WSConnector({
             host: '127.0.0.1',
             endpoint: 'testing',
@@ -67,6 +68,20 @@ describe('Websocket Connections', () => {
         })
         await connector.connect()
         assert.equal(connector.connected, true)
+        connector.close()
+    })
+    it('times out if no response received', async() => {
+        response = {
+            event: 'no event',
+            data: {}
+        }
+        const connector = new WSConnector({
+            host: '127.0.0.1',
+            endpoint: 'testing',
+            verbosity: 0,
+            responseTimeout: 0.1
+        })
+        await assert.rejects(connector.connect(), /timed out/i)
         connector.close()
     })
 })
