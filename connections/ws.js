@@ -3,7 +3,6 @@ import { EventEmitter, once } from 'node:events'
 import { readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-//import { setTimeout } from 'node:timers/promises'
 import { createLogger } from '../util.js'
 import { WebSocket } from 'ws'
 
@@ -16,7 +15,7 @@ async function eventReceived(target, eventName, { timeout } = {}) {
         const [value] = await once(target, eventName, options)
         return value
     } catch (e) {
-        throw new Error(`Timed out! ${e}`)
+        throw new Error(`Timed out! ${e.reason}`)
     }
 }
 
