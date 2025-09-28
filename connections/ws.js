@@ -20,7 +20,7 @@ async function eventReceived(target, eventName, { timeout } = {}) {
 }
 
 export class WSConnector extends EventEmitter {
-    constructor({ host, port = 8002, endpoint, name, verbosity = 2, responseTimeout = 2 }) {
+    constructor({ host, port = 8002, endpoint, name, verbosity = 2, responseTimeout = 10 }) {
         super()
         this.connected = false
         this.name = name
@@ -57,7 +57,7 @@ export class WSConnector extends EventEmitter {
         this.socket.onmessage = this.receive.bind(this)
         this.socket.onopen = this.opened.bind(this)
         this.socket.onclose = this.closed.bind(this)
-        const readyPromise = eventReceived(this, 'ready', { timeout: this.responseTimeout + 0.5 })
+        const readyPromise = eventReceived(this, 'ready', { timeout: this.responseTimeout })
         const token = await eventReceived(this, 'channelConnect', { timeout: this.responseTimeout })
         if (token) {
             this.close()
@@ -92,7 +92,7 @@ export class WSConnector extends EventEmitter {
             this.emit(event, response)
         }
     }
-    request({ id, action, ...params }) {
+    async request({ id, action, ...params }) {
         id = id || randomUUID()
         const message = {
             method: 'ms.channel.emit',
@@ -109,14 +109,9 @@ export class WSConnector extends EventEmitter {
         }
         this.log.debug('Sent: ', message)
         this.socket.send(JSON.stringify(message))
-        const signal = AbortSignal.timeout(4000)
-        return new Promise((res, rej) => {
-            this.once(`response/${id}`, ({ event, response }) => {
-                if (event === 'error') return rej(response)
-                res(response)
-            })
-            signal.addEventListener('abort', rej, { once: true })
-        })
+        const { event, response } = await eventReceived(this, `response/${id}`, { timeout: this.responseTimeout })
+        if (event === 'error') throw new Error(response)
+        return response
     }
     async retrieveToken() {
         if (this.token) return this.token
